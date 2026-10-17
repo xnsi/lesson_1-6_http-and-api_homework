@@ -66,21 +66,52 @@
               name="title"
               type="text"
               minlength="2"
-              placeholder="Замените подсказку под свою тему"
               required
             />
           </div>
 
-          <p class="entry-form__hint">
-            Добавьте остальные поля своей модели. Всего должно быть не меньше четырех
-            содержательных свойств помимо id.
-          </p>
+          <div class="field">
+            <label class="field__label" for="entry-author">Автор</label>
+            <input
+              class="field__control"
+              id="entry-author"
+              name="author"
+              type="text"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="entry-genre">Жанр</label>
+            <input
+              class="field__control"
+              id="entry-genre"
+              name="genre"
+              type="text"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="entry-year">Год первого издания</label>
+            <input
+              class="field__control"
+              id="entry-year"
+              name="year"
+              type="number"
+              min="1"
+              step="1"
+              required
+            />
+          </div>
 
           <div class="entry-form__actions">
             <button class="button button--primary" type="submit" data-action="submit">
               Отправить в API
             </button>
           </div>
+
+          <p class="entry-form__hint" data-ui="submit-status" aria-live="polite"></p>
         </form>
       </section>
     </main>

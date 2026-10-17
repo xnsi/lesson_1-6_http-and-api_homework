@@ -5,6 +5,9 @@ const status = document.querySelector('[data-ui="status"]');
 const statusTitle = status.querySelector(".status__title");
 const statusText = status.querySelector(".status__text");
 const reloadButton = document.querySelector('[data-action="reload"]');
+const entryForm = document.querySelector('[data-form="entry"]');
+const submitButton = document.querySelector('[data-action="submit"]');
+const submitStatus = document.querySelector('[data-ui="submit-status"]');
 document.querySelector('[data-ui="endpoint"]').textContent = API_URL;
 
 function setListState(state, title, message) {
@@ -66,6 +69,49 @@ async function loadBooks() {
   }
 }
 
+async function submitBook(event) {
+  event.preventDefault();
+
+  if (submitButton.disabled || !entryForm.reportValidity()) {
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitStatus.textContent = "Сохраняем книгу...";
+
+  try {
+    const formData = new FormData(entryForm);
+    const book = {
+      title: formData.get("title"),
+      author: formData.get("author"),
+      genre: formData.get("genre"),
+      year: Number(formData.get("year")),
+    };
+
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(book),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    entryForm.reset();
+    submitStatus.textContent = "Книга сохранена.";
+    await loadBooks();
+  } catch (error) {
+    console.error("Не удалось сохранить книгу", error);
+    submitStatus.textContent = "Не удалось сохранить книгу. Проверьте API и повторите отправку.";
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+entryForm.addEventListener("submit", submitBook);
 reloadButton.addEventListener("click", loadBooks);
 loadBooks();
 
