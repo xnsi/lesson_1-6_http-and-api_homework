@@ -1,4 +1,5 @@
 const API_URL = "http://localhost:3000/books";
+const REQUEST_TIMEOUT_MS = 5000;
 
 const collection = document.querySelector('[data-ui="collection"]');
 const status = document.querySelector('[data-ui="status"]');
@@ -48,8 +49,11 @@ async function loadBooks() {
   setListState("loading", "Загрузка", "Загружаем книги...");
   reloadButton.disabled = true;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(API_URL, { signal: controller.signal });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -59,12 +63,16 @@ async function loadBooks() {
     renderBooks(books);
   } catch (error) {
     console.error("Не удалось загрузить книги", error);
+    const timedOut = controller.signal.aborted;
     setListState(
       "error",
-      "Не удалось загрузить книги",
-      'Проверьте, что API запущен, и нажмите "Обновить".'
+      timedOut ? "Время ожидания истекло" : "Не удалось загрузить книги",
+      timedOut
+        ? 'Сервер не ответил вовремя. Нажмите "Обновить".'
+        : 'Проверьте, что API запущен, и нажмите "Обновить".'
     );
   } finally {
+    clearTimeout(timeoutId);
     reloadButton.disabled = false;
   }
 }
