@@ -10,18 +10,48 @@ const reloadButton = document.querySelector('[data-action="reload"]');
 const searchInput = document.querySelector('[data-ui="search"]');
 const sortSelect = document.querySelector('[data-ui="sort"]');
 const entryForm = document.querySelector('[data-form="entry"]');
+const formTitle = document.querySelector("#form-title");
 const submitButton = document.querySelector('[data-action="submit"]');
+const cancelEditButton = document.querySelector('[data-action="cancel-edit"]');
 const submitStatus = document.querySelector('[data-ui="submit-status"]');
 document.querySelector('[data-ui="endpoint"]').textContent = API_URL;
 
 let activeController = null;
 let searchTimeoutId;
+let editingBook = null;
 
 function setListState(state, title, message) {
   status.className = `status status--${state}`;
   statusTitle.textContent = title;
   statusText.textContent = message;
   collection.hidden = state !== "success";
+}
+
+function resetEntryForm() {
+  editingBook = null;
+  entryForm.reset();
+  formTitle.textContent = "Добавить объект";
+  submitButton.textContent = "Отправить в API";
+  cancelEditButton.hidden = true;
+  submitStatus.textContent = "";
+}
+
+function editBook(book) {
+  if (submitButton.disabled) {
+    return;
+  }
+
+  editingBook = book;
+
+  for (const name of ["title", "author", "genre", "year"]) {
+    entryForm.elements[name].value = book[name];
+  }
+
+  formTitle.textContent = "Редактировать книгу";
+  submitButton.textContent = "Сохранить изменения";
+  cancelEditButton.hidden = false;
+  submitStatus.textContent = "";
+  entryForm.elements.title.focus();
 }
 
 function renderBooks(books) {
@@ -44,7 +74,13 @@ function renderBooks(books) {
     meta.className = "card__meta";
     meta.textContent = `Автор: ${book.author}. Жанр: ${book.genre}. Год: ${book.year}.`;
 
-    card.append(title, meta);
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "button button--secondary";
+    editButton.textContent = "Редактировать";
+    editButton.addEventListener("click", () => editBook(book));
+
+    card.append(title, meta, editButton);
     collection.append(card);
   }
 
@@ -118,6 +154,7 @@ async function submitBook(event) {
   }
 
   submitButton.disabled = true;
+  cancelEditButton.disabled = true;
   submitStatus.textContent = "Сохраняем книгу...";
 
   try {
@@ -129,19 +166,25 @@ async function submitBook(event) {
       year: Number(formData.get("year")),
     };
 
-    const response = await fetch(API_URL, {
-      method: "POST",
+    const isEditing = editingBook !== null;
+    const url = isEditing ? `${API_URL}/${encodeURIComponent(editingBook.id)}` : API_URL;
+    const payload = isEditing
+      ? Object.fromEntries(Object.entries(book).filter(([name, value]) => value !== editingBook[name]))
+      : book;
+
+    const response = await fetch(url, {
+      method: isEditing ? "PATCH" : "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(book),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    entryForm.reset();
+    resetEntryForm();
     submitStatus.textContent = "Книга сохранена.";
     await loadBooks();
   } catch (error) {
@@ -149,6 +192,7 @@ async function submitBook(event) {
     submitStatus.textContent = "Не удалось сохранить книгу. Проверьте API и повторите отправку.";
   } finally {
     submitButton.disabled = false;
+    cancelEditButton.disabled = false;
   }
 }
 
@@ -160,6 +204,7 @@ searchInput.addEventListener("input", () => {
 });
 
 sortSelect.addEventListener("change", loadBooks);
+cancelEditButton.addEventListener("click", resetEntryForm);
 entryForm.addEventListener("submit", submitBook);
 reloadButton.addEventListener("click", loadBooks);
 loadBooks();
