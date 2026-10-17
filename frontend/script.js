@@ -1,15 +1,21 @@
 const API_URL = "http://localhost:3000/books";
 const REQUEST_TIMEOUT_MS = 5000;
+const SEARCH_DELAY_MS = 300;
 
 const collection = document.querySelector('[data-ui="collection"]');
 const status = document.querySelector('[data-ui="status"]');
 const statusTitle = status.querySelector(".status__title");
 const statusText = status.querySelector(".status__text");
 const reloadButton = document.querySelector('[data-action="reload"]');
+const searchInput = document.querySelector('[data-ui="search"]');
+const sortSelect = document.querySelector('[data-ui="sort"]');
 const entryForm = document.querySelector('[data-form="entry"]');
 const submitButton = document.querySelector('[data-action="submit"]');
 const submitStatus = document.querySelector('[data-ui="submit-status"]');
 document.querySelector('[data-ui="endpoint"]').textContent = API_URL;
+
+let activeController = null;
+let searchTimeoutId;
 
 function setListState(state, title, message) {
   status.className = `status status--${state}`;
@@ -46,22 +52,45 @@ function renderBooks(books) {
 }
 
 async function loadBooks() {
-  setListState("loading", "Загрузка", "Загружаем книги...");
-  reloadButton.disabled = true;
+  clearTimeout(searchTimeoutId);
+  activeController?.abort();
 
   const controller = new AbortController();
+  activeController = controller;
+  setListState("loading", "Загрузка", "Загружаем книги...");
+  reloadButton.disabled = true;
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch(API_URL, { signal: controller.signal });
+    const url = new URL(API_URL);
+    const query = searchInput.value.trim();
+
+    if (query) {
+      url.searchParams.set("title:contains", query);
+    }
+
+    if (sortSelect.value) {
+      url.searchParams.set("_sort", sortSelect.value);
+    }
+
+    const response = await fetch(url, { signal: controller.signal });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
     const books = await response.json();
+
+    if (controller !== activeController) {
+      return;
+    }
+
     renderBooks(books);
   } catch (error) {
+    if (controller !== activeController) {
+      return;
+    }
+
     console.error("Не удалось загрузить книги", error);
     const timedOut = controller.signal.aborted;
     setListState(
@@ -73,7 +102,11 @@ async function loadBooks() {
     );
   } finally {
     clearTimeout(timeoutId);
-    reloadButton.disabled = false;
+
+    if (controller === activeController) {
+      activeController = null;
+      reloadButton.disabled = false;
+    }
   }
 }
 
@@ -119,6 +152,14 @@ async function submitBook(event) {
   }
 }
 
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchTimeoutId);
+  activeController?.abort();
+  activeController = null;
+  searchTimeoutId = setTimeout(loadBooks, SEARCH_DELAY_MS);
+});
+
+sortSelect.addEventListener("change", loadBooks);
 entryForm.addEventListener("submit", submitBook);
 reloadButton.addEventListener("click", loadBooks);
 loadBooks();

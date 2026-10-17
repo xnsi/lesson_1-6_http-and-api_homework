@@ -166,6 +166,12 @@ button:disabled {
   color: var(--color-primary-dark);
 }
 
+.collection-controls {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
 .status {
   display: grid;
   gap: 4px;
