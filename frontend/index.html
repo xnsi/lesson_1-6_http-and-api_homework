@@ -41,6 +41,27 @@
           <code class="endpoint__value" data-ui="endpoint">http://localhost:3000/items</code>
         </p>
 
+        <div class="collection-controls">
+          <div class="field">
+            <label class="field__label" for="book-search">Поиск по названию</label>
+            <input
+              class="field__control"
+              id="book-search"
+              type="search"
+              data-ui="search"
+            />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="book-sort">Сортировка</label>
+            <select class="field__control" id="book-sort" data-ui="sort">
+              <option value="">Без сортировки</option>
+              <option value="title">Название по возрастанию</option>
+              <option value="-title">Название по убыванию</option>
+            </select>
+          </div>
+        </div>
+
         <div class="status" data-ui="status" role="status" aria-live="polite">
           <strong class="status__title">Ожидание подключения</strong>
           <span class="status__text">Реализуйте первый GET-запрос в script.js.</span>
@@ -66,21 +87,56 @@
               name="title"
               type="text"
               minlength="2"
-              placeholder="Замените подсказку под свою тему"
               required
             />
           </div>
 
-          <p class="entry-form__hint">
-            Добавьте остальные поля своей модели. Всего должно быть не меньше четырех
-            содержательных свойств помимо id.
-          </p>
+          <div class="field">
+            <label class="field__label" for="entry-author">Автор</label>
+            <input
+              class="field__control"
+              id="entry-author"
+              name="author"
+              type="text"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="entry-genre">Жанр</label>
+            <input
+              class="field__control"
+              id="entry-genre"
+              name="genre"
+              type="text"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="entry-year">Год первого издания</label>
+            <input
+              class="field__control"
+              id="entry-year"
+              name="year"
+              type="number"
+              min="1"
+              step="1"
+              required
+            />
+          </div>
 
           <div class="entry-form__actions">
             <button class="button button--primary" type="submit" data-action="submit">
               Отправить в API
             </button>
           </div>
+
+          <button class="button button--secondary" type="button" data-action="cancel-edit" hidden>
+            Отмена
+          </button>
+
+          <p class="entry-form__hint" data-ui="submit-status" aria-live="polite"></p>
         </form>
       </section>
     </main>

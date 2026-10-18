@@ -166,6 +166,12 @@ button:disabled {
   color: var(--color-primary-dark);
 }
 
+.collection-controls {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
 .status {
   display: grid;
   gap: 4px;
@@ -225,6 +231,7 @@ button:disabled {
   display: grid;
   gap: 7px;
   margin: 0;
+  overflow-wrap: anywhere;
   color: var(--color-muted);
   line-height: 1.45;
 }
