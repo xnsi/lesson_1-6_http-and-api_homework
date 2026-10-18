@@ -153,12 +153,13 @@ async function submitBook(event) {
     return;
   }
 
-  submitButton.disabled = true;
-  cancelEditButton.disabled = true;
+  const formData = new FormData(entryForm);
+  for (const field of entryForm.elements) {
+    field.disabled = true;
+  }
   submitStatus.textContent = "Сохраняем книгу...";
 
   try {
-    const formData = new FormData(entryForm);
     const book = {
       title: formData.get("title"),
       author: formData.get("author"),
@@ -191,8 +192,9 @@ async function submitBook(event) {
     console.error("Не удалось сохранить книгу", error);
     submitStatus.textContent = "Не удалось сохранить книгу. Проверьте API и повторите отправку.";
   } finally {
-    submitButton.disabled = false;
-    cancelEditButton.disabled = false;
+    for (const field of entryForm.elements) {
+      field.disabled = false;
+    }
   }
 }
 
